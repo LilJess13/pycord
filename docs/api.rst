@@ -66,7 +66,7 @@ Bot
 .. autoclass:: Bot
     :members:
     :inherited-members:
-    :exclude-members: command, event, message_command, slash_command, user_command
+    :exclude-members: command, event, message_command, slash_command, user_command, listen
 
     .. automethod:: Bot.command(**kwargs)
         :decorator:
@@ -81,6 +81,9 @@ Bot
         :decorator:
 
     .. automethod:: Bot.user_command(**kwargs)
+        :decorator:
+
+    .. automethod:: Bot.listen(name=None)
         :decorator:
 
 AutoShardedBot
@@ -409,6 +412,19 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :type user: Union[:class:`User`, :class:`Member`]
     :param when: When the typing started as an aware datetime in UTC.
     :type when: :class:`datetime.datetime`
+
+.. function:: on_raw_typing(payload)
+
+    Called when someone begins typing a message. Unlike :func:`on_typing`, this is 
+    called regardless if the user can be found in the bot's cache or not.
+
+    If the typing event is occurring in a guild,
+    the member that started typing can be accessed via :attr:`RawTypingEvent.member`
+
+    This requires :attr:`Intents.typing` to be enabled.
+
+    :param payload: The raw typing payload.
+    :type payload: :class:`RawTypingEvent`
 
 .. function:: on_message(message)
 
@@ -759,7 +775,9 @@ to handle it, which defaults to print a traceback and ignoring the exception.
 
 .. function:: on_thread_delete(thread)
 
-    Called whenever a thread is deleted.
+    Called whenever a thread is deleted.  If the deleted thread isn't found in internal cache 
+    then this will not be called. Archived threads are not in the cache. Consider using :func:`on_raw_thread_delete`
+
 
     Note that you can get the guild from :attr:`Thread.guild`.
 
@@ -769,6 +787,14 @@ to handle it, which defaults to print a traceback and ignoring the exception.
 
     :param thread: The thread that got deleted.
     :type thread: :class:`Thread`
+
+.. function:: on_raw_thread_delete(payload)
+    
+    Called whenever a thread is deleted. Unlike :func:`on_thread_delete` this is called
+    regardless of the state of the internal cache.
+
+    :param payload: The raw event payload data.
+    :type payload: :class:`RawThreadDeleteEvent`
 
 .. function:: on_thread_member_join(member)
               on_thread_member_remove(member)
@@ -1228,6 +1254,26 @@ of :class:`enum.Enum`.
 
         .. versionadded:: 2.0
 
+    .. attribute:: directory
+
+        A guild directory entry.
+
+        Used in hub guilds.
+
+        In Experiment.
+
+        .. versionadded:: 2.0
+
+    .. attribute:: forum
+
+        User can only write in threads.
+
+        Similar functionality to a forum.
+
+        In Experiment.
+
+        .. versionadded:: 2.0
+
 .. class:: MessageType
 
     Specifies the type of :class:`Message`. This is used to denote if a message
@@ -1348,6 +1394,11 @@ of :class:`enum.Enum`.
         thread's conversation topic.
 
         .. versionadded:: 2.0
+    .. attribute:: context_menu_command
+
+        The system message denoting that an context menu command was executed.
+
+        .. versionadded:: 2.0
 
 .. class:: UserFlags
 
@@ -1386,6 +1437,9 @@ of :class:`enum.Enum`.
     .. attribute:: team_user
 
         The user is a Team User.
+    .. attribute:: partner_or_verification_application
+
+        Relates to partner/verification applications.
     .. attribute:: system
 
         The user is a system user (i.e. represents Discord officially).
@@ -1404,6 +1458,12 @@ of :class:`enum.Enum`.
     .. attribute:: discord_certified_moderator
 
         The user is a Discord Certified Moderator.
+    .. attribute:: bot_http_interactions
+
+        The bot has set an interactions endpoint url.
+    .. attribute:: spammer
+
+        The user is disabled for being a spammer.
 
 .. class:: ActivityType
 
@@ -1449,6 +1509,9 @@ of :class:`enum.Enum`.
     .. attribute:: component
 
         Represents a component based interaction, i.e. using the Discord Bot UI Kit.
+    .. attribute:: auto_complete
+
+        Represents a autocomplete interaction for slash commands.
 
 .. class:: InteractionResponseType
 
@@ -1482,6 +1545,9 @@ of :class:`enum.Enum`.
         Responds to the interaction by editing the message.
 
         See also :meth:`InteractionResponse.edit_message`
+    .. attribute:: auto_complete_result
+
+        Responds to autocomplete requests.
 
 .. class:: ComponentType
 
@@ -1768,6 +1834,9 @@ of :class:`enum.Enum`.
         The member is "invisible". In reality, this is only used in sending
         a presence a la :meth:`Client.change_presence`. When you receive a
         user's presence this will be :attr:`offline` instead.
+    .. attribute:: streaming
+
+        The member is streaming.
 
 
 .. class:: AuditLogAction
@@ -2362,6 +2431,24 @@ of :class:`enum.Enum`.
 
         .. versionadded:: 2.0
 
+    .. attribute:: scheduled_event_create
+
+        A scheduled event was created.
+
+        .. versionadded:: 2.0
+        
+    .. attribute:: scheduled_event_update
+
+        A scheduled event was updated.
+
+        .. versionadded:: 2.0
+        
+    .. attribute:: scheduled_event_delete
+
+        A scheduled event was deleted.
+
+        .. versionadded:: 2.0
+
     .. attribute:: thread_create
 
         A thread was created.
@@ -2635,6 +2722,61 @@ of :class:`enum.Enum`.
     .. attribute:: age_restricted
 
         The guild may contain NSFW content.
+
+.. class:: EmbeddedActivity
+
+    Represents an embedded activity application.
+
+    .. versionadded:: 2.0
+
+    .. attribute:: betrayal
+
+        Represents the embedded application Betrayal.io
+
+    .. attribute:: chess
+
+        Represents the embedded application Chess in the Park.
+
+    .. attribute:: chess_dev
+
+        Development version of `chess`.
+
+    .. attribute:: doodle_crew
+
+        Represents the embedded application Doodle Crew.
+
+    .. attribute:: fishing
+
+        Represents the embedded application Fishington.io
+
+    .. attribute:: letter_tile
+
+        Represents the embedded application Letter Tile.
+
+    .. attribute:: poker
+
+        Represents the embedded application Poker Night.
+
+    .. attribute:: spell_cast
+
+        Represents the embedded application Spell Cast.
+
+    .. attribute:: watch_together
+
+        Same as `youtube` with remote feature which allows guild admins to limit the playlist access.
+        
+    .. attribute:: watch_together_dev
+
+        Development version of `watch_together`.
+
+    .. attribute:: word_snack
+
+        Represents the embedded application Word Snacks.
+
+    .. attribute:: youtube
+
+        Represents the embedded application Youtube Together.
+
 
 Async Iterator
 ----------------
@@ -3821,6 +3963,22 @@ Template
 
 .. autoclass:: Template()
     :members:
+        
+WelcomeScreen
+~~~~~~~~~~~~~~~
+
+.. attributetable:: WelcomeScreen
+
+.. autoclass:: WelcomeScreen()
+    :members:
+
+WelcomeScreenChannel
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: WelcomeScreenChannel
+
+.. autoclass:: WelcomeScreenChannel()
+    :members:
 
 WidgetChannel
 ~~~~~~~~~~~~~~~
@@ -3887,6 +4045,14 @@ GuildSticker
 .. autoclass:: GuildSticker()
     :members:
 
+RawTypingEvent
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: RawTypingEvent
+
+.. autoclass:: RawTypingEvent()
+    :members:
+
 RawMessageDeleteEvent
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -3941,6 +4107,14 @@ RawIntegrationDeleteEvent
 .. attributetable:: RawIntegrationDeleteEvent
 
 .. autoclass:: RawIntegrationDeleteEvent()
+    :members:
+
+RawThreadDeleteEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: RawThreadDeleteEvent
+
+.. autoclass:: RawThreadDeleteEvent()
     :members:
 
 PartialWebhookGuild
